@@ -253,9 +253,6 @@
 				<string>space</string>
 				<string>guillemotleft</string>
 				<string>guillemotright</string>
-				<string>omacron</string>
-				<string>amacron</string>
-				<string>amacron.alt</string>
 			</array>
 			<key>type</key>
 			<string>glyphList</string>
@@ -277,13 +274,6 @@
 			<real>0.0</real>
 			<real>0.25</real>
 		</array>
-		<key>@MMK_L_round_left</key>
-		<array>
-			<real>1.0</real>
-			<real>1.0</real>
-			<real>0.0</real>
-			<real>0.25</real>
-		</array>
 		<key>@MMK_R_fatter_right</key>
 		<array>
 			<real>1.0</real>
@@ -295,13 +285,6 @@
 		<array>
 			<real>1.0</real>
 			<real>0.5</real>
-			<real>0.0</real>
-			<real>0.25</real>
-		</array>
-		<key>@MMK_R_round_right</key>
-		<array>
-			<real>1.0</real>
-			<real>1.0</real>
 			<real>0.0</real>
 			<real>0.25</real>
 		</array>
@@ -510,9 +493,6 @@
 		<string>space</string>
 		<string>guillemotleft</string>
 		<string>guillemotright</string>
-		<string>omacron</string>
-		<string>amacron</string>
-		<string>amacron.alt</string>
 	</array>
 </dict>
 </plist>

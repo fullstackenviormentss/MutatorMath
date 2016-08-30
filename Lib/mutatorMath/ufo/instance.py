@@ -51,6 +51,7 @@ class InstanceWriter(object):
         self.postScriptFontName = None
         self.locationObject = None
         self.unicodeValues = {}
+        self.addFeaturesFlag = True
         self.swaps = []              # list of glyphname pairs that need swapping
         self.verbose=verbose
         self.logger=logger
@@ -123,6 +124,10 @@ class InstanceWriter(object):
     def setFamilyName(self, name):
         """ Set the familyName"""
         self.font.info.familyName = name
+
+    def clearFeatures(self):
+        """ Remove the features from the instance """
+        self.font.features.text = u""
 
     def copyFeatures(self, featureSource):
         """ Copy the features from this source """

@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <glyph name="adieresis.alt" format="1">
   <advance width="568"/>
-  <note>
-  </note>
   <outline>
     <component base="a.alt"/>
     <component base="dieresis" xOffset="63" yOffset="60"/>

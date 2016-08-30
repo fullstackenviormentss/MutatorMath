@@ -23,6 +23,6 @@
 	<array>
 	</array>
 	<key>styleName</key>
-	<string>TestStyleNameWithFeatures</string>
+	<string>TestStyleNameWithoutFeatures</string>
 </dict>
 </plist>

@@ -2,8 +2,6 @@
 <glyph name="adieresis" format="1">
   <advance width="955"/>
   <unicode hex="00E4"/>
-  <note>
-  </note>
   <outline>
     <component base="dieresis" xOffset="273" yOffset="54"/>
     <component base="a"/>

@@ -150,7 +150,7 @@ if __name__ == "__main__":
         >>> assert sorted(instance.kerning.items()) == [(('@MMK_L_A', 'V'), 100), (('V', '@MMK_R_A'), 100)]
 
 
-            # test the effects of muting the kerning
+            # test the effects of muting the kerning, features
         >>> documentPath = os.path.join(testRoot, 'exporttest_kerning_muted.designspace')
         >>> doc = DesignSpaceDocumentWriter(documentPath, verbose=False)
         >>> doc.addSource(
@@ -160,6 +160,7 @@ if __name__ == "__main__":
         ...        copyLib=True, 
         ...        copyGroups=True, 
         ...        copyInfo=True, 
+        ...        copyFeatures=True,
         ...        muteKerning=False,
         ...        muteInfo=False) 
         >>> doc.addSource(
@@ -172,9 +173,15 @@ if __name__ == "__main__":
         ...        muteKerning=True,    # mute a master at a non-origin location!
         ...        muteInfo=False )
         >>> testOutputFileName = os.path.join(instancePath, "C", "testOutput_kerning_muted.ufo")
+        >>> testOutputFileName2 = os.path.join(instancePath, "C", "testOutput_kerning_muted2.ufo")
         >>> testLocation = dict(weight=0.6)        # change this location to see calculation assertions fail.
-        >>> doc.startInstance(fileName=testOutputFileName, familyName="TestFamily", styleName="TestStyleName", location=testLocation)
+        >>> doc.startInstance(fileName=testOutputFileName, familyName="TestFamily", styleName="TestStyleNameWithFeatures", location=testLocation)
         >>> doc.writeKerning()
+        >>> doc.writeFeatures(state=True)
+        >>> doc.endInstance()
+        >>> doc.startInstance(fileName=testOutputFileName2, familyName="TestFamily", styleName="TestStyleNameWithoutFeatures", location=testLocation)
+        >>> doc.writeKerning()
+        >>> doc.writeFeatures(state=False)
         >>> doc.endInstance()
         >>> doc.save()
         >>> doc = DesignSpaceDocumentReader(documentPath, ufoVersion, roundGeometry=roundGeometry, verbose=False, logPath=logPath)
@@ -185,11 +192,17 @@ if __name__ == "__main__":
         >>> assert doc.groupsSource == 'master_1'
         >>> assert os.path.basename(testOutputFileName) in doc.results
         >>> resultUFOPath = doc.results[os.path.basename(testOutputFileName)]
-        >>> instance = defcon.objects.font.Font(resultUFOPath)
+        >>> instance1 = defcon.objects.font.Font(resultUFOPath)
+        >>> len(instance1.features.text)
+        68
+
+        >>> resultUFOPath2 = doc.results[os.path.basename(testOutputFileName2)]
+        >>> instance2 = defcon.objects.font.Font(resultUFOPath2)
+        >>> len(instance2.features.text)
+        0
 
             # the bold condensed kerning master has been muted, we expect the light condensed data in the instance
-        >>> assert sorted(instance.kerning.items()) == [(('@MMK_L_A', 'V'), -100), (('V', '@MMK_R_A'), -100)]
-
+        >>> assert sorted(instance1.kerning.items()) == [(('@MMK_L_A', 'V'), -100), (('V', '@MMK_R_A'), -100)]
 
             # info data
             #   calculating fields

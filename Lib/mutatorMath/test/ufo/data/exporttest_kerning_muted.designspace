@@ -4,6 +4,7 @@
         <source filename="sources/light/LightCondensed.ufo" name="master_1">
             <lib copy="1" />
             <groups copy="1" />
+            <features copy="1" />
             <info copy="1" />
             <location>
                 <dimension name="weight" xvalue="0.000000" />
@@ -17,11 +18,19 @@
         </source>
     </sources>
     <instances>
-        <instance familyname="TestFamily" filename="instances/C/testOutput_kerning_muted.ufo" stylename="TestStyleName">
+        <instance familyname="TestFamily" filename="instances/C/testOutput_kerning_muted.ufo" stylename="TestStyleNameWithFeatures">
             <location>
                 <dimension name="weight" xvalue="0.600000" />
             </location>
             <kerning />
+            <features copy="1" />
+        </instance>
+        <instance familyname="TestFamily" filename="instances/C/testOutput_kerning_muted2.ufo" stylename="TestStyleNameWithoutFeatures">
+            <location>
+                <dimension name="weight" xvalue="0.600000" />
+            </location>
+            <kerning />
+            <features copy="0" />
         </instance>
     </instances>
 </designspace>

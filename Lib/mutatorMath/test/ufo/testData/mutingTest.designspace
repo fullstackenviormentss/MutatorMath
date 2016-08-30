@@ -28,6 +28,7 @@
                 <glyph mute="1" name="glyphFour" />
             </glyphs>
             <kerning />
+            <features copy="1" />
             <info />
         </instance>
     </instances>

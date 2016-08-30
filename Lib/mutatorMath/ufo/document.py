@@ -188,7 +188,6 @@ class DesignSpaceDocumentWriter(object):
             postScriptFontName=None,
             styleMapFamilyName=None,
             styleMapStyleName=None,
-
             ):
         """ Start a new instance.
             Instances can need a lot of configuration.
@@ -224,7 +223,6 @@ class DesignSpaceDocumentWriter(object):
             instanceElement.attrib['stylemapfamilyname'] = styleMapFamilyName
         if styleMapStyleName is not None:
             instanceElement.attrib['stylemapstylename'] = styleMapStyleName
-
         self.currentInstance = instanceElement
 
     def endInstance(self):
@@ -304,6 +302,20 @@ class DesignSpaceDocumentWriter(object):
         else:
             glyphsElement = self.currentInstance.findall('.glyphs')[0]
         glyphsElement.append(glyphElement)
+
+    def writeFeatures(self, state=True):
+        """ Write the provided feature text to the current instance.
+            If this element is not present, assume it is True
+            If this element is present, state indicates 
+        """
+        if self.currentInstance is None:
+            return
+        featuresElement = ET.Element("features")
+        if state == False:
+            featuresElement.attrib['copy'] = "0"
+        else:
+            featuresElement.attrib['copy'] = "1"
+        self.currentInstance.append(featuresElement)
 
     def writeInfo(self, location=None, masters=None):
         """ Write font into the current instance.
@@ -643,7 +655,7 @@ class DesignSpaceDocumentReader(object):
             # step 2: generate all the glyphs that have special definitions.
             for glyphElement in instanceElement.findall('.glyphs/glyph'):
                 self.readGlyphElement(glyphElement, instanceObject)
-
+        
         # read the kerning
         if makeKerning:
             for kerningElement in instanceElement.findall('.kerning'):
@@ -655,9 +667,20 @@ class DesignSpaceDocumentReader(object):
             for infoElement in instanceElement.findall('.info'):
                 self.readInfoElement(infoElement, instanceObject)
 
+        # read the features flag
+        addFeatures = True
+        for featuresElement in instanceElement.findall(".features"):
+            if featuresElement.attrib.get('copy') == '1':
+                addFeatures = True
+            else:
+                addFeatures = False
+
         # copy the features
-        if self.featuresSource is not None:
-            instanceObject.copyFeatures(self.featuresSource)
+        if addFeatures:
+            if self.featuresSource is not None:
+                instanceObject.copyFeatures(self.featuresSource)
+        else:
+            instanceObject.clearFeatures()
 
         # copy the groups
         if self.groupsSource is not None:

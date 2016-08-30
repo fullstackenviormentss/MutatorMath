@@ -16,6 +16,8 @@ import os, sys, shutil
 
     - mute masters
     - mute specific glyphs
+    - mute features
+    - mute font info
 
 """
 
@@ -49,6 +51,7 @@ def makeTestFonts(rootPath):
     addGlyphs(f1, 0)
     f1.info.unitsPerEm = 1000
     f1.kerning[('glyphOne', 'glyphOne')] = -100
+    f1.features.text = u"# these could be features"
     f2 = Font()
     addGlyphs(f2, 33)
     f2.info.unitsPerEm = 2000
@@ -69,7 +72,7 @@ def testMutingOptions(rootPath, cleanUp=True):
         testLogFile = open(logPath, 'w')
         testLogFile.close()
     except:
-        print "Can't make a logfile."
+        print("Can't make a logfile.")
 
     doc = DesignSpaceDocumentWriter(documentPath, verbose=True)
     doc.addSource(
@@ -100,6 +103,7 @@ def testMutingOptions(rootPath, cleanUp=True):
             )
     doc.writeGlyph('glyphFour', mute=True)  # mute glyphFour in the instance
     doc.writeKerning()
+    doc.writeFeatures()
     doc.writeInfo()
     doc.endInstance()
     doc.save()

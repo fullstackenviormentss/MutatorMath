@@ -45,6 +45,7 @@ Both instance and source elements contain paths to files. These paths are expect
             </location>
             <info/>
             <kerning/>
+            <features copy="1" />
         </instance>
     </instances>
 </designspace>
@@ -75,6 +76,7 @@ Both instance and source elements contain paths to files. These paths are expect
 			[<groups copy="1"/>]
 			[<info [copy="1"][mute="1"]/>]
 			[<kerning mute="1"/>]
+			[<features copy="1"/>]
 
 			<!-- optional: flag to mute a specific source glyph -->
 			[<glyph name="" mute="1"/>]
@@ -255,7 +257,9 @@ The familyname and stylename are necessary to make UFOs. Some additional names c
 	*	Optional.
 	*	Add this element if the instance needs to calculate the font.kerning data. If the kerning element contains a location element this supercedes the instance location.
 	*	A kerning element may have one child **location** element. If present this location should be used in calculating the kerning.
-
+*	```<features copy="1"/>```
+	*	Optional.
+	*	Add this element if the instance needs to copy the provided feature text. If this element is not present, it is assumed the features need to copy.
 #### Example
 
 ```xml

@@ -305,7 +305,7 @@ class DesignSpaceDocumentWriter(object):
 
     def writeFeatures(self, state=True):
         """ Write the provided feature text to the current instance.
-            If this element is not present, assume it is True
+            If this element is not present, the reader will assume it is True
             If this element is present, state indicates 
         """
         if self.currentInstance is None:

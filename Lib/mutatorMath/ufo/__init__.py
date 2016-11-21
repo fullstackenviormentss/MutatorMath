@@ -26,7 +26,7 @@ def build(
 		documentPath,
 		outputUFOFormatVersion=2,
 		roundGeometry=True,
-		verbose=True,
+		verbose=False,
 		logPath=None,
 		progressFunc=None,
 		):

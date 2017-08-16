@@ -91,6 +91,22 @@ class Location(dict):
             if self[key] < other[key]:
                 return True
         return False
+
+    # def __cmp__(self, other):
+    #     if len(self.keys())!=len(other.keys()):
+    #         return False
+    #     for k, v in self.items():
+    #         if v == int(v):
+    #             v = int(v)
+    #         if other[k] == int(other[k]):
+    #             o = int(other[k])
+    #         else:
+    #             o = other[k]
+    #         if v != o:
+    #             return False
+    #     return True
+
+
     
     def expand(self, axisNames):
         """

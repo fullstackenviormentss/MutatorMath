@@ -3,8 +3,35 @@ import sys
 from mutatorMath.objects.error import MutatorError
 from mutatorMath.objects.location import Location, biasFromLocations
 import mutatorMath.objects.mutator
+from mutatorMath.objects.error import MutatorError
 
-def noBend(loc): return loc
+
+def noBend(loc, space=None): return loc
+
+def validateMap(m):
+    # validate the progress of the map
+    # only increasing sections allowed
+    # no horizontals or decreasing.
+    m = m[:]
+    m.sort()
+    lx = None
+    ly = None
+    if len(m)<2:
+        return False
+    for x, y in m:
+        if lx is None:
+            lx = x
+            ly = y
+            continue
+        dx = x-lx
+        dy = y-ly
+        if dy == 0:
+            return False
+        if dy < 0:
+            return False
+        lx = x
+        ly = y
+    return True
 
 class WarpMutator(mutatorMath.objects.mutator.Mutator):
     def __call__(self, value):
@@ -45,34 +72,43 @@ class Bender(object):
         warpDict = {}
         self.maps = {}    # not needed?
         self.warps = {}
+        self.reversedWarps = {}
         for axisName, axisAttributes in axes.items():
             mapData = axisAttributes.get('map', [])
             if type(mapData)==list:
                 if mapData==0:
                     # this axis has no bender
                     self.warps[axisName] = None
+                    self.reversedWarps[axisName] = None
                 else:
-                    self._makeWarpFromList(axisName, mapData, axisAttributes['minimum'], axisAttributes['maximum'])
+                    self.warps[axisName] = self._makeWarpFromList(axisName, mapData, axisAttributes['minimum'], axisAttributes['maximum'])
+                    self.reversedWarps[axisName] = self._makeWarpFromList(axisName, mapData, axisAttributes['minimum'], axisAttributes['maximum'], reverse=True)
             elif hasattr(mapData, '__call__'):
                 self.warps[axisName] = mapData
-    
+                # can't make a reversed map for a function.maximum
+
     def __repr__(self):
-        return "<Bender %s>"%(str(self.warps.items()))
+        return "<Bender warps:%s rev.warps:%s>"%(str(self.warps.items()), str(self.reversedWarps.items()))
 
     def getMap(self, axisName):
         return self.maps.get(axisName, [])
             
-    def _makeWarpFromList(self, axisName, warpMap, minimum, maximum):
+    def _makeWarpFromList(self, axisName, warpMap, minimum, maximum, reverse=False):
         if not warpMap:
             warpMap = [(minimum,minimum), (maximum,maximum)]
-        self.warps[axisName] = warpMap
         # check for the extremes, add if necessary
+        # validate the graph only goes up
         if not sum([a==minimum for a, b in warpMap]):
             warpMap = [(minimum,minimum)] + warpMap
         if not sum([a==maximum for a, b in warpMap]):
             warpMap.append((maximum,maximum))
+        if not validateMap(warpMap):
+            raise MutatorError("invalid warp map:", mapData)
         items = []
+        last = None
         for x, y in warpMap:
+            if reverse:
+                x, y = y, x
             items.append((Location(w=x), y))
         m = WarpMutator()
         items.sort()
@@ -86,7 +122,7 @@ class Bender(object):
                 m.setNeutral(obj)
                 break
         if m.getNeutral() is None:
-            raise MutatorError("Did not find a neutral for this system", m)
+            raise MutatorError("Did not find a neutral for this warp system", m)
         for loc, obj in items:
             lb = loc-bias
             if lb.isOrigin(): continue
@@ -98,12 +134,17 @@ class Bender(object):
             m.addDelta(loc, obj, punch=False,  axisOnly=True)
         for loc, obj in ofx:
             m.addDelta(loc, obj, punch=True,  axisOnly=True)
-        self.warps[axisName] = m
+        return m
+        # self.warps[axisName] = m
 
-    def __call__(self, loc):
+    def __call__(self, loc, space="design"):
         # bend a location according to the defined warps
+        if space == "design":
+            warpSource = self.warps
+        elif space == "user":
+            warpSource = self.reversedWarps
         new = loc.copy()
-        for dim, warp in self.warps.items():
+        for dim, warp in warpSource.items():
             if warp is None:
                 new[dim] = loc[dim]
                 continue
@@ -118,6 +159,7 @@ class Bender(object):
 if __name__ == "__main__":
     # no bender
     assert noBend(Location(a=1234)) == Location(a=1234)
+    assert noBend(Location(a=1234),space="user") == Location(a=1234)
     assert noBend(Location(a=(12,34))) == Location(a=(12,34))
 
     # linear map, single axis
@@ -125,7 +167,13 @@ if __name__ == "__main__":
     b = Bender(w)
     assert b(Location(aaaa=0)) == Location(aaaa=0)
     assert b(Location(aaaa=500)) == Location(aaaa=500)
+    assert b(Location(aaaa=(100,200))) == Location(aaaa=(100,200))
     assert b(Location(aaaa=1000)) == Location(aaaa=1000)
+    # with reversed warp
+    assert b(Location(aaaa=0),space="user") == Location(aaaa=0)
+    assert b(Location(aaaa=500),space="user") == Location(aaaa=500)
+    assert b(Location(aaaa=(100,200)),space="user") == Location(aaaa=(100,200))
+    assert b(Location(aaaa=1000),space="user") == Location(aaaa=1000)
 
     # linear map, single axis
     #w = {'a': [(0, 100), (1000, 900)]}
@@ -134,17 +182,26 @@ if __name__ == "__main__":
     assert b(Location(aaaa=0)) == Location(aaaa=100)
     assert b(Location(aaaa=500)) == Location(aaaa=500)
     assert b(Location(aaaa=1000)) == Location(aaaa=900)
+    # with reversed warp
+    assert b(Location(aaaa=100),space="user") == Location(aaaa=0)
+    assert b(Location(aaaa=500),space="user") == Location(aaaa=500)
+    assert b(Location(aaaa=900),space="user") == Location(aaaa=1000)
 
     # linear map, single axis, not mapped to 1000
     #w = {'a': [(0, 100), (1000, 900)]}
-    w = {'aaaa':{'map': [(-1, 2), (0,0), (1, 2)], 'name':'aaaaAxis', 'tag':'aaaa', 'minimum':-1, 'maximum':1, 'default':0}}
+    w = {'aaaa':{'map': [(-1, -2), (0,0), (1, 2)], 'name':'aaaaAxis', 'tag':'aaaa', 'minimum':-1, 'maximum':1, 'default':0}}
     b = Bender(w)
-    assert b(Location(aaaa=(-1, 1))) == Location(aaaa=(2,2))
-    assert b(Location(aaaa=-1)) == Location(aaaa=2)
-    assert b(Location(aaaa=-0.5)) == Location(aaaa=1)
+    assert b(Location(aaaa=(-1, 1))) == Location(aaaa=(-2,2))
+    assert b(Location(aaaa=-1)) == Location(aaaa=-2)
+    assert b(Location(aaaa=-0.5)) == Location(aaaa=-1)
     assert b(Location(aaaa=0)) == Location(aaaa=0)
     assert b(Location(aaaa=0.5)) == Location(aaaa=1)
     assert b(Location(aaaa=1)) == Location(aaaa=2)
+    # with reversed warp
+    a = b(Location(aaaa=(2,2)),space="user")
+    assert b(Location(aaaa=(2,2)),space="user") == Location(aaaa=(1, 1))
+    assert b(Location(aaaa=(-2,2)),space="user") == Location(aaaa=(-1, 1))
+    assert b(Location(aaaa=-1),space="user") == Location(aaaa=-0.5)
 
     # one split map, single axis
     #w = {'a': [(0, 0), (500, 200), (600, 600)]}
@@ -168,6 +225,15 @@ if __name__ == "__main__":
     assert b(Location(aaaa=600)) == Location(aaaa=600)
     assert b(Location(aaaa=750)) == Location(aaaa=1200)
     assert b(Location(aaaa=1000)) == Location(aaaa=2200)
+
+    # check the reverse warps
+    assert b(Location(aaaa=(100, 40)), space="user") == Location(aaaa=(250, 100))
+    assert b(Location(aaaa=0), space="user") == Location(aaaa=0)
+    assert b(Location(aaaa=100), space="user") == Location(aaaa=250)
+    assert b(Location(aaaa=200), space="user") == Location(aaaa=500)
+    assert b(Location(aaaa=600), space="user") == Location(aaaa=600)
+    assert b(Location(aaaa=1200), space="user") == Location(aaaa=750)
+    assert b(Location(aaaa=2200), space="user") == Location(aaaa=1000)
 
     # now with warp functions
     # warp functions must be able to handle split tuples
@@ -198,5 +264,21 @@ if __name__ == "__main__":
         ex_type, ex, tb = sys.exc_info()
         err = 'A warpfunction "warpFunc_Error" (for axis "c") raised "integer division or modulo by zero" at location c:-1'
         assert ex.msg == err
+
+    maps = [
+            [(0,0), (100, 100), (200, 200)],                # wel
+            [(200,0), (100, 100), (0, 200)],                # niet
+            [(0,100), (100, 100), (100,100), (200, 200)],   # niet
+            [(100, 100), (0,100), (100,100), (200, 200)],   # niet
+            [(0,0), (1, 0.00001), (99, 100)]
+        ]
+
+    assert validateMap([(0,0), (100, 100), (200, 200)]) == True # regular increase
+    assert validateMap([(200,0), (100, 100), (0, 200)]) == False # hidden decrease, mixed up
+    assert validateMap([(0,100), (100, 100), (100,100), (200, 200)]) == False # Flat section between increases
+    assert validateMap([(0,100), (100, 0), (200, 200)]) == False # Flat section between increases
+    assert validateMap([(0,100)]) == False  # not a valid map
+    assert validateMap([(0,100), (200,200)]) == True  # Smallest valid amap
+    assert validateMap([(200,100), (0,200)]) == False  # Smallest invalid amap
 
 

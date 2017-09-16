@@ -70,7 +70,6 @@ class Bender(object):
         # axes dict:
         #   { <axisname>: {'map':[], 'minimum':0, 'maximum':1000, 'default':0, 'tag':'aaaa', 'name':"longname"}}
         warpDict = {}
-        self.maps = {}    # not needed?
         self.warps = {}
         self.reversedWarps = {}
         for axisName, axisAttributes in axes.items():
@@ -83,15 +82,12 @@ class Bender(object):
                 else:
                     self.warps[axisName] = self._makeWarpFromList(axisName, mapData, axisAttributes['minimum'], axisAttributes['maximum'])
                     self.reversedWarps[axisName] = self._makeWarpFromList(axisName, mapData, axisAttributes['minimum'], axisAttributes['maximum'], reverse=True)
-            elif hasattr(mapData, '__call__'):
-                self.warps[axisName] = mapData
-                # can't make a reversed map for a function.maximum
 
     def __repr__(self):
         return "<Bender warps:%s rev.warps:%s>"%(str(self.warps.items()), str(self.reversedWarps.items()))
 
-    def getMap(self, axisName):
-        return self.maps.get(axisName, [])
+    # def getMap(self, axisName):
+    #     return self.maps.get(axisName, [])
             
     def _makeWarpFromList(self, axisName, warpMap, minimum, maximum, reverse=False):
         if not warpMap:
@@ -135,7 +131,6 @@ class Bender(object):
         for loc, obj in ofx:
             m.addDelta(loc, obj, punch=True,  axisOnly=True)
         return m
-        # self.warps[axisName] = m
 
     def __call__(self, loc, space="design"):
         # bend a location according to the defined warps
@@ -176,7 +171,6 @@ if __name__ == "__main__":
     assert b(Location(aaaa=1000),space="user") == Location(aaaa=1000)
 
     # linear map, single axis
-    #w = {'a': [(0, 100), (1000, 900)]}
     w = {'aaaa':{'map': [(0, 100), (1000, 900)], 'name':'aaaaAxis', 'tag':'aaaa', 'minimum':0, 'maximum':1000, 'default':0}}
     b = Bender(w)
     assert b(Location(aaaa=0)) == Location(aaaa=100)
@@ -188,7 +182,6 @@ if __name__ == "__main__":
     assert b(Location(aaaa=900),space="user") == Location(aaaa=1000)
 
     # linear map, single axis, not mapped to 1000
-    #w = {'a': [(0, 100), (1000, 900)]}
     w = {'aaaa':{'map': [(-1, -2), (0,0), (1, 2)], 'name':'aaaaAxis', 'tag':'aaaa', 'minimum':-1, 'maximum':1, 'default':0}}
     b = Bender(w)
     assert b(Location(aaaa=(-1, 1))) == Location(aaaa=(-2,2))
@@ -235,36 +228,7 @@ if __name__ == "__main__":
     assert b(Location(aaaa=1200), space="user") == Location(aaaa=750)
     assert b(Location(aaaa=2200), space="user") == Location(aaaa=1000)
 
-    # now with warp functions
-    # warp functions must be able to handle split tuples
-    def warpFunc_1(value):
-        if isinstance(value, tuple):
-            return value[0]*2, value[1]*2
-        return value * 2
-    def warpFunc_2(value):
-        if isinstance(value, tuple):
-            return value[0] ** 2, value[1] ** 2
-        return value ** 2
-    def warpFunc_Error(value):
-        return 1/0
-
-    w = {   'aaaa':{'map': warpFunc_1, 'name':'aaaaAxis', 'tag':'aaaa', 'minimum':0, 'maximum':1000, 'default':0},
-            'bbbb':{'map': warpFunc_2, 'name':'bbbbAxis', 'tag':'bbbb', 'minimum':0, 'maximum':1000, 'default':0},
-        }
-    # w = {'a': warpFunc_1, 'b': warpFunc_2, 'c': warpFunc_Error}
-    b = Bender(w)
-    assert b(Location(aaaa=(100, -100))) == Location(aaaa=(200.000,-200.000))
-    assert b(Location(aaaa=100)) == Location(aaaa=200)
-    assert b(Location(bbbb=100)) == Location(bbbb=10000)
-
-    # # see if the errors are caught and reported:
-    try:
-        b(Location(c=-1))
-    except:
-        ex_type, ex, tb = sys.exc_info()
-        err = 'A warpfunction "warpFunc_Error" (for axis "c") raised "integer division or modulo by zero" at location c:-1'
-        assert ex.msg == err
-
+    #
     maps = [
             [(0,0), (100, 100), (200, 200)],                # wel
             [(200,0), (100, 100), (0, 200)],                # niet

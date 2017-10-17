@@ -110,6 +110,11 @@ A UFO stores data related to the design and production of fonts
 subpackage contains some tools to make the building and processing of
 UFO mutators easier.
 
+Note
+----
+
+A better implementation of the designspace format and a UFO builder are `here <https://github.com/LettError/designSpaceDocument>`.
+
 Designspace document
 --------------------
 
